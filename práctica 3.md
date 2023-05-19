@@ -78,3 +78,83 @@
     ![Untitled](/img/tp3-15.png)
 
 16. Tal como pasó en el punto 14, aunque elimine el archivo “prueba2.txt” puedo acceder al hard-link del mismo puesto que cada hard-link se mantienen como entradas separadas con su propio nombre y metadatos. Cuando se elimina un archivo, como "prueba2.txt", se elimina esa entrada específica del sistema de archivos, pero los hard-links que apuntan al mismo inodo del archivo aún existen y siguen siendo válidos.
+
+# RAID
+
+// Para que todo funcione hice el `apt-update` y después el `apt install linux-image-amd64`.
+
+1. RAID (Redundant Array of Independent Disks) es una tecnología que combina múltiples unidades de almacenamiento en un solo grupo lógico para mejorar la confiabilidad, el rendimiento o ambos. Los diferentes niveles de RAID más comunes son:
+
+   1. **RAID 0 (_Striping_)**: Distribuye los datos entre varias unidades en franjas (**_stripes_**) para mejorar el rendimiento. No ofrece redundancia, por lo que si una unidad falla, se pierden todos los datos del grupo.
+   2. **RAID 1 (_Mirroring_)**: Duplica los datos en dos o más unidades para brindar redundancia. Si una unidad falla, los datos se pueden recuperar desde la unidad espejo. El rendimiento de lectura puede mejorar, pero el rendimiento de escritura es similar al de una sola unidad. Ocupa mucho espacio.
+   3. **RAID 5 (_Striping with Parity_)**: Distribuye los datos en varias unidades al tiempo que almacena información de paridad para recuperar datos en caso de fallo de una unidad. Proporciona un equilibrio entre rendimiento, capacidad y redundancia.
+   4. **RAID 6 (_Striping with Double Parity_)**: Similar a RAID 5, pero con dos conjuntos de datos de paridad, lo que brinda mayor capacidad de tolerancia a fallos. Puede recuperarse de la falla simultánea de hasta dos unidades.
+   5. **RAID 10 (RAID 1+0)**: Combina la duplicación de datos de RAID 1 con el rendimiento de striping de RAID 0. Los datos se duplican en múltiples unidades y luego se distribuyen en franjas.
+
+   Estos son solo algunos de los niveles de RAID más comunes. Cada nivel tiene sus propias ventajas y consideraciones en términos de rendimiento, capacidad y confiabilidad. La elección del nivel de RAID adecuado depende de los requisitos específicos del sistema, como la tolerancia a fallos, el rendimiento necesario y el costo.
+
+2. ![Untitled](/img/tp3-R-2.png)
+
+3. Creación de las particiones:
+
+   ![Untitled](/img/tp3-R-3-1.png)
+
+   `fdisk -l`:
+
+   ![Untitled](/img/tp3-R-3-2.png)
+
+4. _EN PROCESO_
+5. Son las particiones.
+
+6-14 sin hacer
+
+# LVM - Logical Volumen Management
+
+1. LVM, o Logical Volume Manager (Gestor de Volúmenes Lógicos), es una tecnología utilizada en sistemas operativos Linux para administrar el almacenamiento en disco. Proporciona una capa de abstracción entre los discos físicos y los sistemas de archivos, lo que permite una gestión más flexible y dinámica de los volúmenes de almacenamiento.
+
+   La principal ventaja de LVM sobre el particionado tradicional de Linux es su capacidad para crear y administrar volúmenes lógicos que pueden abarcar varios discos físicos o particiones. Esto significa que se pueden combinar varios discos en un único volumen lógico, lo que proporciona una mayor flexibilidad en términos de gestión del espacio en disco.
+
+   Algunas de las ventajas específicas de LVM son:
+
+   1. Administración dinámica del espacio: Con LVM, es posible redimensionar volúmenes lógicos en tiempo real sin tener que desmontar los sistemas de archivos o interrumpir el funcionamiento del sistema. Esto permite ajustar el tamaño de los volúmenes en función de las necesidades cambiantes de almacenamiento sin interrupciones.
+   2. Administración de discos en caliente: LVM permite agregar o quitar discos físicos en caliente, es decir, mientras el sistema está en funcionamiento. Esto facilita la expansión o modificación de los volúmenes lógicos sin tener que detener o reiniciar el sistema.
+   3. Gestión de snapshots: LVM ofrece la capacidad de crear instantáneas (snapshots) de los volúmenes lógicos. Los snapshots son copias virtuales de un volumen en un punto determinado en el tiempo, lo que permite realizar copias de seguridad o realizar pruebas sin afectar los datos originales.
+   4. Gestión de volúmenes en espejo y en RAID: LVM permite la creación de volúmenes lógicos en espejo y la configuración de RAID a nivel de volumen. Esto proporciona redundancia de datos y mayor tolerancia a fallos, lo que aumenta la disponibilidad y confiabilidad del almacenamiento.
+
+   En resumen, LVM ofrece una mayor flexibilidad y facilidad de gestión en comparación con el particionado tradicional de Linux. Permite la administración dinámica del espacio en disco, la gestión de discos en caliente, la creación de snapshots y la configuración de volúmenes en espejo y en RAID, lo que lo convierte en una opción atractiva para aquellos que requieren una administración avanzada del almacenamiento en Linux.
+
+2. Los "**_snapshots_**" en LVM son copias virtuales de un volumen lógico en un momento específico. Se crean capturando el estado actual del volumen y asignando espacio adicional para cambios futuros. A medida que se realizan modificaciones en el volumen original, estos cambios se registran en el snapshot, mientras que el volumen original se mantiene sin cambios. Los snapshots permiten realizar copias de seguridad, pruebas y revertir cambios sin afectar el volumen original.
+
+3-30 sin hacer
+
+# BTRFS & ZFS
+
+1.  1. Las siglas `BTRFS` significan "B-Tree File System". El término "B-Tree" se refiere a una estructura de datos utilizada para organizar y gestionar eficientemente la información en un sistema de archivos.
+
+       Las siglas `ZFS` significan "Zettabyte File System". Un zettabyte es una unidad de medida de almacenamiento que equivale a 1 billón de gigabytes.
+
+    2. BTRFS fue creado por Oracle Corporation y lanzado en 2007. Desde entonces, ha sido desarrollado y mantenido por la comunidad de código abierto. En cuanto a su licenciamiento, BTRFS se distribuye bajo la Licencia Pública General GNU (GNU General Public License, GPL), que es una licencia de software libre y de código abierto.
+
+       ZFS fue creado originalmente por Sun Microsystems (ahora propiedad de Oracle Corporation) y lanzado en 2005. Actualmente, ZFS es mantenido y desarrollado por la comunidad de código abierto. En cuanto a su licenciamiento, ZFS utiliza la Licencia Pública Común de Sun (Sun Common Development and Distribution License, CDDL), que es una licencia de código abierto.
+
+    3. Algunas características importantes de BTRFS son:
+
+       - Administración avanzada de volúmenes y subvolúmenes: BTRFS permite la gestión flexible de volúmenes y subvolúmenes, lo que facilita la organización y administración del almacenamiento.
+       - Copias instantáneas (snapshots): BTRFS ofrece la capacidad de crear instantáneas del sistema de archivos en tiempo real, lo que permite realizar copias de seguridad y revertir cambios.
+       - RAID y tolerancia a fallos: BTRFS soporta diferentes niveles de RAID para la redundancia de datos y la protección contra fallos de disco.
+       - Compresión y deduplicación: BTRFS incluye opciones de compresión y deduplicación de datos, lo que puede ayudar a ahorrar espacio en disco.
+       - Integridad de datos: BTRFS utiliza checksums para verificar la integridad de los datos almacenados, detectando y corrigiendo errores cuando sea posible.
+
+       Algunas características importantes de ZFS son:
+
+       - Almacenamiento y gestión de volúmenes: ZFS proporciona un sistema de archivos combinado con la gestión de volúmenes, lo que permite un control integral del almacenamiento.
+       - Integridad de datos y detección de errores: ZFS utiliza checksums para detectar y corregir errores de datos en tiempo real, brindando una mayor fiabilidad y protección contra la corrupción de datos.
+       - RAID y tolerancia a fallos: ZFS incluye una variedad de niveles de RAID y ofrece opciones avanzadas de tolerancia a fallos para proteger los datos contra fallos de hardware.
+       - Copias instantáneas (snapshots): ZFS permite la creación rápida de instantáneas para realizar copias de seguridad, clonar sistemas de archivos y revertir cambios.
+       - Compresión y deduplicación: ZFS ofrece opciones de compresión de datos y deduplicación, lo que puede ahorrar espacio en disco al eliminar duplicados y comprimir los datos almacenados.
+
+    4. Copy-on-Write (COW) es una técnica utilizada por sistemas de archivos como BTRFS y ZFS. En la técnica Copy-on-Write, cuando se realiza una escritura en un archivo, en lugar de modificar directamente los datos existentes, se realiza una copia de los datos en una ubicación diferente. De esta manera, los datos originales permanecen intactos y se crea una copia actualizada. Esto garantiza la integridad de los datos y permite la creación de instantáneas (snapshots) eficientes, ya que solo se copian los bloques de datos que cambian, en lugar de todo el sistema de archivos. La técnica Copy-on-Write es fundamental para la implementación de las características de instantáneas y la integridad de datos en BTRFS y ZFS.
+
+       La técnica Copy-on-Write (COW) también se utiliza en ZFS de manera similar a BTRFS. Cuando se realiza una escritura en un archivo, ZFS crea una copia actualizada de los datos en una ubicación diferente en lugar de modificar directamente los datos originales. Esto asegura la integridad de los datos y permite la creación eficiente de instantáneas y la administración del almacenamiento.
+
+2-18 sin hacer
