@@ -210,6 +210,28 @@
 10. Si bien se especifico que se cree con un tamaño de 117MB, creo que se creo con un tamaño de 120MB.
 11. ✅
 12. ✅
+13. ✅
+14. Es posible (?
+15. 1. `lvextend -L +20M /dev/so/lv_vol1`
+    2. No se refleja ya que se extendió el volumen, pero el file system no cambió, no contempla ese espacio extra.
+    3. ![Untitled](/img/tp3-L-15.png)
+16. Sip.
+17. Es posible, no se por qué.
+18. ?
+19. ![Untitled](/img/tp3-L-19.png)
+
+20. ![Untitled](/img/tp3-L-20.png)
+
+21. `lvcreate -L 500M -n lv_vol3 so`.
+22. ✅
+23. `cp -r /etc/[abcd]* /mnt/volu1`
+24. ✅
+25. Tengo exactamente lo mismo que en `/mnt/volu1`. Lógicamente.
+26. Tiene el mismo tamaño que `lv1`.
+27. En la carpeta original se eliminó la carpeta mientras que en el snapshot no.
+28. ✅
+29. No los tiene!!!
+30. no se, desapareció y los comandos no funcionan!!!!
 
 # BTRFS & ZFS
 
