@@ -103,10 +103,78 @@
 
    ![Untitled](/img/tp3-R-3-2.png)
 
-4. _EN PROCESO_
-5. Son las particiones.
+4. DESPUÉS DE HORAS!!! pude
 
-6-14 sin hacer
+   ![Untitled](/img/tp3-R-4.png)
+
+5. Son las particiones.
+6. 1. `Array size: 610304`.
+   2. **`mdadm --detail`** se refiere al tamaño utilizado por cada dispositivo en el conjunto RAID. En este caso es `305152`.
+7. El comando **`cat /proc/mdstat`** muestra el estado actual de los dispositivos RAID en el sistema.
+
+   ![Untitled](/img/tp3-R-7.png)
+
+   **`Personalities`** indica los niveles de RAID compatibles en el sistema. En este caso podemos leer que el dispositivo md0 está activo y funcionando al nivel 5
+
+8. 1. `mkfs.ext4 /dev/md0`:
+
+      ![Untitled](/img/tp3-R-8-1.png)
+
+   2. ```bash
+      mkdir /mnt/rd5
+      mount /dev/md0 /mnt/rd5
+      ```
+
+   3. ```bash
+      mkdir /mnt/rd5/directorio
+      touch /mnt/rd5/directorio/archivo1.txt
+      touch /mnt/rd5/directorio/archivo2.txt
+      ```
+
+   4. Ejecuto `mdadm --fail /dev/md0 /dev/sda7` .
+
+      ![Untitled](/img/tp3-R-8-4.png)
+
+   5. Ejecuto `mdadm --detail /dev/md0`
+      1. Existen 2 dispositivos.
+      2. El tamaño del RAID no se modificó.
+      3. Disminuiría la cantidad de dispositivos.
+   6. Ejecuto `mdadm --remove /dev/md0 /dev/sda7`
+
+      ![Untitled](/img/tp3-R-8-6.png)
+
+   7. Estado del RAID:
+
+      ![Untitled](/img/tp3-R-8-7.png)
+
+      1. Si se ha quitado correctamente el componente **`/dev/sda7`** del RAID, es posible que todavía se pueda acceder al directorio **`/mnt/rd5`**, pero con ciertas limitaciones. Si los archivos fueron distribuidos de manera uniforme entre los dispositivos restantes en el RAID, es probable que todavía puedas acceder a algunos de ellos. Sin embargo, ten en cuenta que al quitar un componente en falla, el RAID está en un estado degradado y la integridad de los datos puede verse comprometida. Es posible que algunos archivos no sean accesibles o estén dañados.
+      2. Si tuvieras otra partición configurada como "hot-spare" en el RAID, esta partición se habría utilizado automáticamente para reemplazar al componente en falla (en este caso, **`/dev/sda7`**). La partición "hot-spare" se activa y se sincroniza con el resto del RAID para mantener la redundancia y la integridad de los datos. Esto significa que no habrías tenido que quitar manualmente el componente en falla, ya que el RAID se habría reconstruido automáticamente con la partición "hot-spare".
+
+   8. Ejecuto `mdadm --zero-superblock /dev/sda7`.
+
+9. 1. Ejecuto `mdadm –add /dev/md0 /dev/sda7`con respuesta `added`.
+   2. Ejecuto `mdadm –detail /dev/md0` con respuesta
+
+      ![Untitled](/img/tp3-R-9-2.png)
+
+   3. Cuando se agrega una nueva partición al RAID, el RAID comenzará a reconstruirse automáticamente. Esto implica que se copiarán los datos desde los otros componentes existentes en el RAID a la nueva partición para restaurar la redundancia y la integridad de los datos.
+
+      El estado "Rebuild Status" indica el progreso de la reconstrucción del RAID. Puede mostrar diferentes valores como "Idle" (inactivo) si no se está realizando ninguna reconstrucción en ese momento, o un porcentaje que indica el progreso de la reconstrucción, como "XX% complete" (XX% completado).
+
+      Durante la reconstrucción, es importante permitir que el proceso se complete antes de realizar cualquier otra operación en el RAID. El tiempo necesario para la reconstrucción depende del tamaño del RAID y del rendimiento del sistema.
+
+   4. Si, esta todo.
+
+10. Sé que se haría con `mdadm --add /dev/md0 --spare /dev/sdaX` pero no se cuál crear.
+11. Listop.
+12. `mdadm --add /dev/md0 /dev/sda8`
+    1. Se agrega como `spare`.
+13. Al ponerla en falla entonces pasa a `faulty` y la partición que estaba como spare, osea `/dev/sd8`para a active sync.
+14. 1. `umount /mnt/rd5`
+    2. `mdadm --fail / --remove /dev/md0 /dev/sda` en 5, 6 y 8
+    3. `mdadm --zero-superblock /dev/sda5 /dev/sda6 /dev/sda7`
+    4. `mdadm --remove /dev/md0`
+    5. sigue existiendo!! asjdajs algo hice mal 😞
 
 # LVM - Logical Volumen Management
 
@@ -124,8 +192,24 @@
    En resumen, LVM ofrece una mayor flexibilidad y facilidad de gestión en comparación con el particionado tradicional de Linux. Permite la administración dinámica del espacio en disco, la gestión de discos en caliente, la creación de snapshots y la configuración de volúmenes en espejo y en RAID, lo que lo convierte en una opción atractiva para aquellos que requieren una administración avanzada del almacenamiento en Linux.
 
 2. Los "**_snapshots_**" en LVM son copias virtuales de un volumen lógico en un momento específico. Se crean capturando el estado actual del volumen y asignando espacio adicional para cambios futuros. A medida que se realizan modificaciones en el volumen original, estos cambios se registran en el snapshot, mientras que el volumen original se mantiene sin cambios. Los snapshots permiten realizar copias de seguridad, pruebas y revertir cambios sin afectar el volumen original.
+3. ✅
+4. El comando "pvcreate" se utiliza en LVM (Logical Volume Manager) para crear un nuevo Physical Volume (Volumen Físico) en uno o varios discos o particiones.
 
-3-30 sin hacer
+   En en este caso se están creando dos nuevos volúmenes físicos utilizando los dispositivos `/dev/sda5` y `/dev/sda6`.
+
+5. ![Untitled](/img/tp3-L-5.png)
+
+6. ✅
+7. ![Untitled](/img/tp3-L-7.png)
+
+   1. El tamaño total del VG es 592 MiB
+   2. "PE" se refiere a "Physical Extent" (Extensión Física). Un PE es la unidad de asignación básica en un Volumen de Grupo (Volume Group) de LVM. El número de PEs total indica la cantidad total de PEs que existen en el VG, mientras que el número de PEs utilizadas representa la cantidad de PEs que se han asignado y utilizan actualmente en el VG para los Logical Volumes (LVs).
+
+8. ✅
+9. La diferencia clave entre los dos comandos radica en la forma en que se especifica el tamaño del LV. El primero utiliza Extensiones Lógicas (-l) y el segundo utiliza un tamaño absoluto (-L) en una unidad específica.
+10. Si bien se especifico que se cree con un tamaño de 117MB, creo que se creo con un tamaño de 120MB.
+11. ✅
+12. ✅
 
 # BTRFS & ZFS
 
