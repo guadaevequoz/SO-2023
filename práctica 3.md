@@ -263,4 +263,62 @@
 
        La técnica Copy-on-Write (COW) también se utiliza en ZFS de manera similar a BTRFS. Cuando se realiza una escritura en un archivo, ZFS crea una copia actualizada de los datos en una ubicación diferente en lugar de modificar directamente los datos originales. Esto asegura la integridad de los datos y permite la creación eficiente de instantáneas y la administración del almacenamiento.
 
-2-18 sin hacer
+2.  ✅
+3.  ✅
+4.  Sí, por defecto, Btrfs replica los datos y los metadatos para proporcionar tolerancia a fallos y protección contra la corrupción de datos. Btrfs utiliza el mecanismo de duplicación de datos llamado "duplicación de datos en línea" (inline data duplication) y también implementa mecanismos de integridad y checksum para asegurar la integridad de los datos almacenados. El comando **`btrfs fi df -h /disco5`** o **`btrfs df usage /disco5`** nos proporcionará información sobre la distribución de los datos y los metadatos en el sistema de archivos Btrfs montado en **`/disco5`**.
+5.  El espacio alocado es 3Gb y el usado es 17MB.
+6.  El espacio alocado es 3Gb y el usado es 19MB.
+7.  Sip.
+8.  Si, aumento, de hecho ya no puedo agregar más nada porque llene todo. De 3GB se están usando 2,8GB.
+9.  `mdadm --create /dev/md1 --level=1 --raid-devices=2 /dev/sda9 /dev/sda10` y un mount.
+10. Si, la razón por la que es posible generar los archivos anteriores en el sistema de archivos Btrfs es porque Btrfs proporciona un sistema de archivos completo y funcional con soporte para operaciones de escritura y lectura. Esto significa que puedes crear, leer, escribir y administrar archivos y directorios en el sistema de archivos Btrfs de manera similar a otros sistemas de archivos comunes.
+11. Los cree con: `btrfs subvolume create /mnt/disco5/volX` siendo x 1 y 2 respectivamente. El subvolumen 1 tiene el ID `257` y el volumen 2 tiene el ID `258`. El "top level" indica el ID del subvolumen principal que contiene a estos subvolúmenes, que en este caso es 5.
+
+    ![Untitled](/img/tp3-B-11.png)
+
+12. Tanto volumen 1 como volumen 2 tiene espacio disponible de 2,7G. No es necesario que el subvolumen top-level esté montado para poder montar sus subvolúmenes. Se puede montar directamente los subvolúmenes sin necesidad de montar el subvolumen top-level. Cada subvolumen se trata como una entidad independiente y se puede montar individualmente.
+13. Si, es posible ver el archivo en `volumen1`. Es posible que los subvolúmenes compartan bloques de datos y que Btrfs utilice técnicas como la deduplicación y la compresión para reducir el espacio utilizado. Esto puede hacer que el espacio consumido en **`/disco5`**, **`/volumen1`** y **`/volumen2`** no refleje exactamente la suma de los tamaños de los archivos individuales.
+14. Limite el tamaño con `btrfs qgroup limit 300M /mnt/disco5/vol2`. No me deja crear el archivo, dice que se ha excedido la cuota de disco.
+15. Limite el tamaño con `btrfs qgroup limit 450M /mnt/disco5/vol2`. Ahora si me deja crearlo.
+16. En el caso de los archivos creados antes de generar el snapshot, el espacio ocupado por el archivo de texto y el archivo de 100MB se incrementará en el espacio consumido después de generar el snapshot. Esto se debe a que los datos de esos archivos se considerarán modificados después del snapshot, lo que llevará a un incremento en el espacio consumido.
+
+    Por lo tanto, es probable observar un aumento en el espacio consumido después de generar el snapshot, reflejando los cambios realizados en el subvolumen original desde el momento del snapshot.
+
+    ![Untitled](/img/tp3-B-16.png)
+
+17. No, al modificar el contenido del archivo original agregándole "para sistemas operativos", el contenido del archivo en el snapshot no se modificará automáticamente. Los snapshots en Btrfs se crean capturando una instantánea del subvolumen en un momento específico y, a partir de ese punto, los cambios realizados en el subvolumen original no se reflejarán en el snapshot.
+
+    Cuando se crea un snapshot, Btrfs captura una copia en el estado actual del subvolumen, incluyendo los metadatos y los bloques de datos correspondientes a los archivos existentes en ese momento. Los cambios posteriores en el subvolumen original, como modificaciones de archivos o adiciones de nuevos archivos, no afectarán al contenido del snapshot.
+
+    En este caso, al agregar "para sistemas operativos" al contenido del archivo original, solo se modificará el archivo en el subvolumen original. El contenido del archivo en el snapshot se mantendrá tal como estaba en el momento de la creación del snapshot.
+
+    Es importante tener en cuenta que los snapshots en Btrfs se utilizan principalmente para realizar copias de seguridad o crear puntos de restauración en el tiempo. Si se desea reflejar los cambios en el subvolumen original en un snapshot, se debería crear un nuevo snapshot después de realizar las modificaciones.
+
+18. Si se desea volver al estado original de un subvolumen en Btrfs sin realizar una copia o movimiento de los archivos, se puede hacer utilizando la funcionalidad de "rollback" o "revert" que ofrece Btrfs. Esta característica permite volver a un estado anterior del subvolumen restaurando los metadatos y los bloques de datos correspondientes.
+
+    Para volver al subvolumen original:
+
+    1. Desmontar el subvolumen que se desea revertir:
+
+       ```bash
+       bashCopy code
+       umount /disco5/vol1
+       ```
+
+    2. Realizarel _rollback_ del subvolumen al estado original:
+
+       ```bash
+       bashCopy code
+       btrfs subvolume snapshot /disco5/snap /disco5/vol1
+       ```
+
+       Este comando creará un nuevo snapshot a partir del snapshot existente **`/disco5/snap`** y lo establecerá como el nuevo estado del subvolumen **`/disco5/vol1`**. Esto restaurará los metadatos y los bloques de datos del subvolumen original.
+
+    3. Volver a montar el subvolumen:
+
+       ```bash
+       bashCopy code
+       mount -o subvol=vol1 /dev/md1 /disco5/vol1
+       ```
+
+    Después de completar estos pasos, el subvolumen **`/disco5/vol1`** estará restaurado a su estado original tal como estaba en el snapshot **`/disco5/snap`**. No se realizará una copia o movimiento de los archivos, ya que el rollback simplemente vuelve a establecer los metadatos y los bloques de datos en el estado capturado por el snapshot.
