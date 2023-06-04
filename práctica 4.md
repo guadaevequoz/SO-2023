@@ -37,6 +37,7 @@
       2. Hypervisor de tipo 2 o "hosted": Se ejecuta como una aplicación en un sistema operativo anfitrión y gestiona las VM sobre ese sistema operativo. Este tipo de hypervisor es más común en entornos de escritorio y desarrollo. Ejemplos de hypervisors de tipo 2 son VMware Workstation, Oracle VirtualBox y Microsoft Virtual PC.
 
       Ambos tipos de hypervisors tienen sus usos y características específicas, y la elección depende de los requisitos y el entorno de virtualización en particular.
+
 4. La full virtualization (virtualización completa) es una técnica de virtualización en la que el hypervisor permite que las máquinas virtuales (VM) se ejecuten en un entorno aislado y emulen un conjunto completo de recursos de hardware virtualizados. En la full virtualization, las VM no tienen conocimiento de que se están ejecutando en un entorno virtual y pueden ejecutar cualquier sistema operativo compatible con el hardware subyacente. El hypervisor se encarga de traducir las instrucciones de la VM para que sean compatibles con el hardware físico del servidor. Ejemplos de hypervisors de full virtualization incluyen VMware ESXi y Microsoft Hyper-V.
 
    Por otro lado, la virtualización asistida por hardware, también conocida como virtualización nativa o virtualización con extensiones de hardware, es una tecnología que utiliza características específicas del hardware subyacente para mejorar el rendimiento y la eficiencia de las máquinas virtuales. Los procesadores modernos suelen incluir extensiones de virtualización, como Intel VT (Virtualization Technology) o AMD-V, que ofrecen instrucciones adicionales y funcionalidades diseñadas para acelerar las operaciones de virtualización. Estas extensiones permiten que el hypervisor y las VM interactúen directamente con el hardware, evitando la necesidad de traducciones o emulaciones complejas. La virtualización asistida por hardware mejora el rendimiento de las VM y reduce la sobrecarga de la virtualización. La mayoría de los hypervisors modernos aprovechan estas extensiones para proporcionar una mayor eficiencia en entornos virtualizados.
@@ -194,6 +195,7 @@
    En comparación con el punto anterior, donde se mencionaban los namespaces activados en el sistema, los namespaces net, ipc y uts para el proceso **`cron`** serían los mismos que los namespaces net, ipc y uts del sistema principal, ya que el proceso **`cron`** se ejecuta en ese mismo entorno y no crea namespaces adicionales.
 
 5. a
+
    1. `unshare --uts sh`
    2. ```bash
       # hostname
@@ -236,6 +238,7 @@
       ```
 
    6. Después de salir, el nombre del host anfitrión vuelve a ser el mismo que en el sistema principal, ya que el nuevo namespace UTS se ha abandonado y los cambios realizados en él ya no se aplican.
+
 6. 1. `unshare --ipc sh`
    2. En el namespace el PID es `2681` y en el host anfitrión es `2609`.
    3. `unshare --pid --fork --mount-proc`
@@ -254,3 +257,143 @@
             2 pts/4    00:00:00 ps
         ```
    5. `exit`
+
+---
+
+# Docker
+
+1. Docker es una plataforma de contenedores que permite crear, distribuir y ejecutar aplicaciones de manera eficiente y aislada. Se basa en la tecnología de contenedores de Linux y proporciona una capa adicional de abstracción y herramientas para simplificar el desarrollo, despliegue y gestión de aplicaciones.
+
+   Beneficios de los contenedores en Docker:
+
+   1. Portabilidad y compatibilidad: Los contenedores Docker ofrecen una forma consistente de empaquetar una aplicación junto con todas sus dependencias y configuraciones en un único objeto autónomo. Esto facilita la portabilidad de la aplicación, ya que se puede ejecutar en cualquier entorno que tenga Docker instalado, independientemente del sistema operativo o la infraestructura subyacente. Además, los contenedores proporcionan una mayor compatibilidad entre diferentes sistemas, evitando problemas de dependencias y conflictos.
+   2. Aislamiento y eficiencia: Los contenedores proporcionan un alto nivel de aislamiento entre las aplicaciones y su entorno. Cada contenedor tiene su propio espacio de nombres, lo que significa que no pueden interferir entre sí ni con el sistema host. Esto permite ejecutar múltiples aplicaciones de forma segura y aislada en el mismo host sin que interactúen o afecten negativamente a otras aplicaciones. Además, los contenedores son ligeros en términos de recursos y se pueden iniciar y detener rápidamente, lo que los hace eficientes en cuanto a consumo de memoria y tiempo de arranque.
+
+   Otros beneficios adicionales de los contenedores Docker incluyen la escalabilidad, la gestión simplificada de las dependencias, la automatización del despliegue y la facilidad para compartir y distribuir aplicaciones. Estas características hacen que Docker sea ampliamente utilizado en el desarrollo ágil, la integración continua, la entrega continua y la orquestación de contenedores a gran escala.
+
+2. Una imagen es un paquete de sólo lectura que contiene todo lo necesario para ejecutar aplicaciones (librerías, configuraciones, etc.). Un contenedor es una instancia de una imagen en ejecución. La principal diferencia entre ambos es la capa escribible. Desde una imagen se pueden crear varios contenedor. Cada uno es autónomo y ejecuta en su propio entorno aislado.
+3. Union Filesystem, también conocido como UnionFS, es un tipo de sistema de archivos que permite combinar varios sistemas de archivos en una sola vista lógica. Proporciona una forma eficiente de combinar y superponer varios directorios y sistemas de archivos en una jerarquía unificada. Docker utiliza Union Filesystem como parte de su arquitectura de contenedores para implementar y administrar imágenes y contenedores de forma eficiente.
+
+   Los archivos creados dentro de un contenedor son almacenados en una capa escribible. Los datos no persisten cuando el contenedor deja de existir. Escribir dentro del contenedor requiere de un “storage driver” que provee un “union filesystem” usando el kernel de Linux.
+
+   En resumen, Union Filesystem es una tecnología fundamental en Docker que permite la creación de imágenes en capas y la administración eficiente de contenedores mediante la superposición de sistemas de archivos. Esto ofrece beneficios en términos de eficiencia de almacenamiento, rendimiento y facilidad de administración de contenedores.
+
+4. Cuando se crean contenedores en Docker, por defecto, utilizan direcciones IP dentro del rango de direcciones IP privadas reservadas para redes locales. El rango de direcciones IP más comúnmente utilizado por Docker es `172.17.0.0/16`. Sin embargo, este rango de direcciones IP puede variar dependiendo de la configuración de red específica de Docker. Docker asigna automáticamente una dirección IP a cada contenedor que se crea.
+
+   La obtención de estas direcciones IP se realiza a través de un mecanismo llamado Docker bridge network. Cuando Docker se instala, crea una interfaz de red virtual llamada "docker0" que actúa como un puente entre los contenedores y el host. Esta interfaz de red tiene una dirección IP asignada, y Docker utiliza la tecnología de NAT (Network Address Translation) para traducir las direcciones IP de los contenedores a través de esta interfaz.
+
+   Cuando se crea un contenedor, Docker asigna una dirección IP única dentro del rango especificado a la interfaz de red del contenedor. Además, Docker configura automáticamente las reglas de reenvío de IP y puertos para permitir la comunicación entre el contenedor y el host, así como entre los contenedores.
+
+5. Docker tiene dos opciones para almacenar datos en el host y que los datos sean persistentes:
+   - **Volúmenes**: Los volúmenes en Docker son una forma de almacenar y gestionar datos de forma persistente fuera del ciclo de vida de los contenedores. Los volúmenes son directorios especiales en el sistema de archivos del host o en un área designada por Docker que se montan en los contenedores. Los datos escritos en un volumen desde un contenedor están disponibles para otros contenedores que también monten ese mismo volumen. Los volúmenes se pueden utilizar para almacenar datos de aplicaciones, bases de datos, archivos de configuración, etc. Los volúmenes son administrados por Docker y persisten incluso cuando los contenedores se detienen o se eliminan. La ventaja de los volúmenes es que son independientes de la vida útil de los contenedores, lo que permite mantener los datos intactos aunque se elimine y vuelva a crear un contenedor.
+   - **Bind Mounts**: Los bind mounts, o montajes de directorios del host, son una forma de vincular un directorio o archivo específico en el host con un directorio dentro del contenedor. Esto permite que el contenedor acceda a los datos del directorio del host y los utilice como datos persistentes. Los cambios realizados en el contenedor se reflejan directamente en el directorio del host y viceversa. Los bind mounts ofrecen una gran flexibilidad para compartir datos entre el host y el contenedor, ya que cualquier cambio realizado en el directorio del host se reflejará inmediatamente en el contenedor y viceversa. Sin embargo, a diferencia de los volúmenes, los bind mounts están vinculados a la ubicación específica del directorio en el host, por lo que si se elimina el directorio del host, se perderán los datos.
+
+## Taller
+
+1. Instale docker desde `https://docs.docker.com/engine/install/debian/#set-up-the-repository`.
+2. 1. El tamaño lo encontramos en la columna: `SIZE` y es 77,8 MB. 1. La imagen descargada aún no se considera un contenedor, sino solo una plantilla para crear contenedores basados en esa imagen. Un contenedor es una instancia en ejecución de una imagen, sólo descargue la imagen. 1. "`Using default tag: latest`" significa que Docker utiliza la etiqueta "**latest**" por defecto al descargar una imagen si no se especifica ninguna otra etiqueta. La etiqueta "latest" suele referirse a la versión más reciente de una imagen.
+
+      ```bash
+      so@so2022:~$ docker pull ubuntu
+      Using default tag: latest
+      latest: Pulling from library/ubuntu
+      837dd4791cdc: Pull complete
+      Digest: sha256:ac58ff7fe25edc58bdf0067ca99df00014dbd032e2246d30a722fa348fd799a5
+      Status: Downloaded newer image for ubuntu:latest
+      docker.io/library/ubuntu:latest
+      so@so2022:~$ docker images
+      REPOSITORY                                  TAG       IMAGE ID       CREATED         SIZE
+      ubuntu                                      latest    1f6ddc1b2547   12 days ago     77.8MB
+      hello-world                                 latest    9c7a54a9a43c   4 weeks ago     13.3kB
+      ```
+
+   2. Para realizar esto ejecute el comando: `docker run ubuntu ls -l`.
+   3. Al ejecutar `docker run ubuntu /bin/bash`no sucede nada, no puedo utilizar la shell Bash del contenedor.
+
+      1. Para poder iniciar el contenedor con una terminal interactiva se ejecuta el comando: `docker run -it ubuntu /bin/bash`. Al agregar la opción **`-it`**, se inicia el contenedor en modo interactivo con una terminal, lo que te permite interactuar directamente con la shell Bash del contenedor.
+      2. El PID dentro del contenedor es 1 y fuera 2129.
+
+         ```bash
+         root@6c5b7031a1e7:/# echo $$
+         1
+         root@6c5b7031a1e7:/# exit
+         exit
+         so@so2022:~$ echo $$
+         2129
+         ```
+
+      3. La salida del comando `lsns` muestra información sobre los diferentes namespaces del contenedor.
+
+         ```bash
+         root@a58e44380338:/# lsns
+                 NS TYPE   NPROCS PID USER COMMAND
+         4026531834 time        2   1 root /bin/bash
+         4026531837 user        2   1 root /bin/bash
+         4026532389 mnt         2   1 root /bin/bash
+         4026532390 uts         2   1 root /bin/bash
+         4026532391 ipc         2   1 root /bin/bash
+         4026532392 pid         2   1 root /bin/bash
+         4026532394 net         2   1 root /bin/bash
+         4026532580 cgroup      2   1 root /bin/bash
+         ```
+
+      4. `touch /sistemas-operativos`.
+      5. Los contenedores de Docker tienen su propio sistema de archivos aislado, por lo que los cambios realizados dentro del contenedor no se reflejan en el sistema operativo anfitrión.
+
+   4. Al ejecutar nuevamente el contenedor se puede observar que no se encuentra el archivo creado anteriormente, esto es debido a que cada vez que se inicia un contenedor se crea una nueva instancia del mismo basada en la imagen Ubuntu original, lo que significa que cualquier cambio realizado dentro del contenedor se perderá cuando se detenga y vuelva a iniciarse.
+   5. 1. El container_id se obtiene con el comando:
+
+         ```bash
+         so@so2022:~$ docker ps -a --filter "ancestor=ubuntu" --format "{{.ID}}\t{{.Image}}\t{{.Command}}\t{{.CreatedAt}}"
+         1cea4e261d84	ubuntu	"/bin/bash"	2023-06-04 11:17:30 -0300 -03
+         a58e44380338	ubuntu	"/bin/bash"	2023-06-04 11:13:32 -0300 -03
+         6c5b7031a1e7	ubuntu	"/bin/bash"	2023-06-04 11:10:01 -0300 -03
+         0b7f5bec4343	ubuntu	"/bin/bash"	2023-06-04 11:08:37 -0300 -03
+         26208fb91f70	ubuntu	"ls -l"	2023-06-04 11:06:46 -0300 -03
+         ```
+
+      2. Efectivamente se encuentra el archivo.
+
+         ```bash
+         so@so2022:~$ docker start -ia a58e44380338
+         root@a58e44380338:/# ls
+         bin   dev  home  lib32  libx32  mnt  proc  run   sistemas-operativos  sys  usr
+         boot  etc  lib   lib64  media   opt  root  sbin  srv                  tmp  var
+         ```
+
+   6. Para poder verificar los contenedores actualmente en ejecución y su estado se ejecuta el comando `docker ps -a`.
+
+      ![Untitled](/img/tp4.png)
+
+   7. Primero hay que detener todos los contenedores en ejecución con el comando `docker stop $(docker ps -aq)`. Luego, para eliminar todos los contenedores se ejecuta:
+
+3. 1. `docker run -it ubuntu /bin/bash`
+   2. ✅
+   3. Si no se especifica nombre por defecto se genera sin un nombre específico y se le asigna un identificador único.
+
+      ```bash
+      so@so2022:~$ docker commit 05da9ea4b2f6
+      sha256:3ccf2ef51c14897a78c2b0bd44a68365ecc7a109ca5fd5db5f1b55c68e559c43
+      ```
+
+   4. `docker tag 3ccf2ef51c14 nginx-so:v1`.
+   5. 1. Ruta absoluta: `$HOME/so/nginx-so`.
+      2. ✅
+      3. `docker run -p 8080:80 -v $HOME/so/nginx-so:/var/www/html nginx-so:v1 nginx -g 'daemon off;’.`
+   6. No me funciona!!
+   7. No lo puedo hacer porque no me funciona.
+   8. Idem g.
+
+4. 1. ```bash
+      FROM ubuntu
+      EXPOSE 80
+      RUN apt-get update && apt-get install -y nginx
+      COPY index.html /var/www/html
+      CMD ["nginx", "-g", "daemon off;"]
+      ```
+
+   2. `docker build -t nginx-so:v2 $HOME/so/nginx-so`
+   3. ✅
+   4. No se ven reflejados los cambios. Esto se debe a que el contenido del archivo se copió en el momento de la construcción de la imagen y no se actualiza automáticamente.
+   5. No se ven reflejados los cambios porque la construcción del contenedor no incluía los nuevos cambios.
+   6. Ahora si se ven los cambios!! Porque se guardan con la construcción de la imagen.
