@@ -1,0 +1,139 @@
+tp 1:
+
+el kernel es un programa que ejecuta programas y controlka hardware. es la conexion entre el usuairo y el hardware. controla dispositivos de entrada salida y la memoria.
+es monolitico hibrido porque se ejecutan drivers en modo kernel pero puedo usar modulos.
+los modulos son funcionalidades que no necesitan recompilar el kernel para pdoer utilizarse, si falla se para todo el so. estan en /lib/modules y se pueden ver con lsmod. 
+el kernel es estrictamente el so. 
+los parches son archivos para pdoer actualizar la version del kernel, tiene un archivo llamado diff que tiene las cosas que se agregan y las que se sacan. esto es mejor pq solo se descarga el archivo en vez de cambiar de version. 
+las versiones fueron cambiando comenzandopor la 0.6, 0.12 (GNU), 2 (es robusto y propiamente un kernel), 3 (cambio estetico por los 20 años), 4 (uso de parches), 5 (soporte de ipv6, soporte de usb 4, nueva forma de llamar syscalls, restrigir acciones que un conjunto de prograsmas pueden ejecutar en un filesysten), 6 (modulos de rust).
+el versionado son 3: versiones < 2.6 eran 3 numeros X.Y.Z, donde X era la version, Y determinaba si era en desarrollo o produccion con numneros impares y pares correpsondientemente, y z era arreglos de bugs. version desde la 2.6 hasta la 3, tenia 4 numeros: A.B.C.D, A era el numero de version, B, cambios importantes, C, revision menor, D areeglos de bugs no agrega funcion alidad. En la 3.0 para adelante se volvio a las 3: A.B.C: a es rfevision mayor, b revision menor, c numero de revision.
+el kernel se compila para mejorar el rendimiento, agregar elementos, mejorar version, corregir errores, etc. 
+para instalar el kernel necesito: 
+1. descargar la version que quiero
+2. hacer el arbol de archivos fuente: se descarga el kernel en la carpera /usr/src y el nombre del kernel por ej kernel 5.16
+3. se configura el kernel con el archivo .config: puede ser con el comando make config (es feo y tedioso), make xconfig (interfaz con sistema de vetnanas) y make menuconfig (utiliza la libreria ncurses y es mas interactivo)
+4. se ejecuta make -jX para compilar el kernel, con j podemos ejecutar en paralelo para que sea mas rapido y X es la cantidad de cores
+5. se ejecuta make install modules para instalar modulos
+6. ejecuto make install que va a acomodar todos los archivos de copilacion
+	6.1. si hay error ejecuto make clean y ejecuto todo de nuevo corregido
+7. creo el initramfs que son archivos temporarios
+8. actualizo el grub para decirle que voy a usar una nueva version o algo cambio
+9. reboot
+
+tp2:
+un kernel puede ser:
+- monolitico: todos se ejecuta en un mismo lugar y se comparte espacio de direcciones, es mucho más rápido pero limitado.
+- microkernel: todo esta separado en procesos de usuario, por esto se hace siemore un cambio de contexto. el kernel es chiquito y más modificable y usable.
+
+las system calls son llamadas que se ejecutan en modo kernel y realizan una operacion o maneja un dispositivo. 
+una syscall se puede llamar con un wrapper de una libreria o simplemente a la syscall y como parámetro el nombre de la syscall.
+para crear una syscall hay que:
+1. definir su syscall number
+2. agregarla a la tabla de syscall 
+3. se declara la syscall con la macro asmlinkage que se encarga de que los parametros se pasen por stack y no por registros
+4. se agrega la syscall en un arbol de fuentes
+5. se recompila el kernel
+strace permite ver las syscalls que realiza cualquier programa
+
+las SO APIS son funciones que son intermediarías entre la aplicación y las syscalls, por ejemplo libc, que es una libreria de C que basicamente otorga funciones que luego se comportan como syscalls siendo el flujo de trabajo: app -> libreria -> syscall
+
+los módulos extienden la funcionalidad del kernel. se descargan y cargan bajo demanda. algunos comandos son: modprob que carga el modulo, lsmod que los enlista, insmod que trata de levantar el modulo, rmmod que trata de eliminarlo, modinfo da info del modulo, depmod calcula las dependencias del modulo. 
+para crear un modulo necesito definir las funciones de insmod y rmmod, su init y exit. 
+insmod trata de cargar el modulo mientras que modprobe emplea info de depmod para cargar el modulo.
+
+un dispositivo es un dispositivo de hardware y el kernel lo identifica como un archivo, llamados device file. los dispositivos tienen un major y minor number y con eso se identifican. estan en el directorio /dev, para crear un devide file se usa el comando mknod.
+para que se puedan utilizar los dispositivos se usan porciones de codigo llamadas drivers. 
+los dispositivos pueden ser de acceso aleatorio o seriales.
+los drivers pueden ser de bloques que son datos persistentes y se escribe y lee de a bloques de 1024; driver de caracter que lee de a 1 byte a la vez; o driver de red que son tarjetas de red, wifi, etc. 
+un driver es como un modulo ya que le dice al kernel como leer y escribir un dispositivo. 
+
+el archivo makefile define reglas de construccion y dependencias entre los componentes de un proyecto
+
+tp3:
+
+un archivo es un conjunto de datos, el so lo ve como bloques de disco.
+un file system es una abstraccion que permite gestionar archivos, permitiendo: crear, eliminar, modificar y buscar archivos y sus correpsondientesd directorios. además permiten gestionar permisos. 
+algunos son:
+* ext 2 -> usa blockgroups
+* ext 3 -> extiende de ext2. tiene journaling lo que le permite recuperarse de errores
+* ext 4 -> extiende de ext2. tiene extents por lo que tiene menos fragmentacion 
+* xfs -> tiene journaling, extents y maneja de manera dinamica los inodos. tiene menos fragmentacion. 
+* procfs y sysfs son pseudo filesystem para acceder a informacion del kernel o los ubsistemas correspondientemente
+* vfs es una capa de software sobre el kernel que le permite tener varios filesystem, utilizar inodos y otros componentes. 
+
+un inodo tiene metadata de un archivo, sin incluir el nombre. un archivo tiene nombre, metadata y datos.
+
+RAID permite utilizar varios discos para almacenar informacion. tiene diferentes niveles:
+nivel 0: tiene stripping. si falla 1 disco fallan todos.
+nivel 1: tiene mirroring. tarda mucho en escribir y gasta mucho espacio. necesita minimo 2 discos.
+nivel 5: tiene stripping y paridad. minimo 3 discos.
+nivel 6: tiene stripping y doble paridad. minimo 4 discos.
+niveles combinados
+el stripping consta en dividir datos en bloques en varios discos. 
+el mirroring consta de duplicar información para evitar y recuperarse de fallos. 
+
+DDP es una evolucion de RAID y necesita minimo 11 discos. se supone que es mejor.
+
+LVM provee un mejor almacenamiento masivo, permitiendo crear particiones  y ademas tiene snapshots. se compone de grupos de volumenes que tienen volumenes fisicos y estos se dividen en 1 o varios volumenes logicos. 
+los snapshots permiten guardar la info cuando se modifica un dato. se basa en COW.
+
+COW se basa en copiar los datos mientras se escriben para preservarse en caso de fallas.
+
+BTRFS esun sdistema de archivos basado en COW. tiene volumenes y subvolumenes de informacion. tiene snapshots. alocacion dinamica de inodos. soporta 5 niveles de RAID. 
+
+los link simbolicos son un acceso directo al archivo o directorio tiene la ruta del archivo, mientras que el hard link es un enlace directo. cuando se crea un hardlink no se crea un inodo porque ya existe uno en el archivo o directorio al que apunta directamente, mientras que al crearse un link simbolico si se crea ya que es como una copia. si se elimina el archivo el link simbolico queda con informacion basura y el hard link mantiene el acceso al archivo. hard link no puede ser a directorios, solo archivos. link simbolico a ambos. 
+
+tp4:
+
+el comando chroot lo que hace es cambiar el directorio raiz de un proceso para que se pueda aislar del resto del programa y entra al jail root. 
+
+los control groups permiten jerarquizar procesos. el pseudo filesystem que se crea es llamado cgroups y se permite establecer jerarquias para proporcionar mejor otorgamiento y monitoreo de recursos hacia los distintos procesos, además de permisos y otros. 
+cgroups v1 se monta en /sys/fs/cgroup y se usan archivos de configuraicon para establecer los limites y los recursos.
+cgroups v2 se monta en /sys/fs/cgroup/unified y se usa un solo controlador que unifica los de v1. 
+
+namespace isolation es una forma de aislar procesos y recursos, le da la idea a un proceso de que determinado recurso solo esta disponible para el, o sea aisla un recurso global junto a un proceso. limita lo que el proceso ve y usa. una vez que se deja un namespace este se elimina. un proceso puede estar en un namespace a la vez. se pueden usar syscalls como clone (se crea un nuevo proceso y un nuevo namespace al que se lo agrega), unshare (se agrega el proceso actual a un nuevo namespace) y setns (se agrega el proceso actual a un namespace existente). con lsns se ven los namespaces. 
+
+la diferencia entre virtualizaicon y emulacion es que la virtualizacion crea instancias virtuales a partir de hardware fisico para compartir recursos y ejecutar so, mientras que la emulacion crea un entorno completo para simular el comportamiento especifico de hw o sw. 
+
+los containers de linux son tecnologia liviana que permiten ejecutar multiples sistemas aislados en un mismo host. para el SO son como procesos normales, aunque en realidad son como MV. 
+
+docker permite ejecutar aplicaciones en containers aislados. contiene un dockerd, api rest y cli docker.
+funciona como cliente servidor donde el cliente envia peticiones por la api rest. el dockerd escucha las api rest y administra los objetos de docker. 
+docker usa herramientas como namespaces, control groups y union file system.
+docker tiene imagenes que son archivos con todo lo necesario para simular aplicaciones. tiene capas y la ultima es escribible.
+un container es una instancia de esa imagen. no tiene capa escribible.
+un registry es un almacen de imagen, se usa docker hub por defecto.
+un dockerfile ayuda a crear una imagen. si las imagenes estan en el docker hub no necesito un dockerfile. 
+los datos no son persistentes.
+para escrtibir datos en el hub existen dos maneras:
+usar volumenes que son partes del filesystem que administra docker 
+o bind mounts que basicamente se monta en cualquier parte del fs y docker no tiene control. 
+algunos comandos son:
+docker pull imagen -> descarga la imagen
+docker run imagen -> corre la imagen, opcionalmente se agrega el -it para hacerlo interactivo
+docker image build -t nombre -> crea una imagen a partir de un dockerfile
+docker info -> info general
+docker ps -> containers en ejecucion
+docker images -> muestra las imagenes
+union fs permite unir varios fs en una sola vista logia. permite la creación de imágenes en capas y la administración eficiente de contenedores mediante la superposición de sistemas de archivos.
+las imagenes de docker utilizan IP privada. 
+
+tp5:
+
+docker compose permite crear varios contenedores que se comunican entre ellos para trabajar en conjunto. consta de un archivo compose que es el binario y un archivo que contiene toda la configuracion que se necesita. 
+cuando se invoca al binario docker-compose, se busca el archivo docker-compose.yml que tiene todos los contenedores que se necesitan. es de formato YAML. 
+existen trres versiones del archivo compose. la primera esta obsoleta, la tercera es la ultima. la 2 y 3 comparten estructura pero no algunas opciones. en general las versiones son compatibles. 
+la estructura basica del archivo compose tiene: version, servicios, imagenes, puertos, volumenes, etc. 
+
+docker-compose -v: verifica la version
+docker-compose create: crea los contenedores del compose, pero no los inicia, debe ejecutar docker-compose start
+docker-compose up: crea y levanta los contenedores
+docker-compose stop: frena los contenedores sin eliminarlos
+docker-compose down: frena y elimina los contenedores
+docker-compose up -d: inicia contenedores en background
+docker-compose ls: lista ontenedores iniciados
+docker-compose ps: lista de los servicios definidos
+docker-compose rm: elimina los contrenedores
+docker-compose logs: ve los logs de los contenedores
+docker-compose run: crea e inicia un nuevo contenedor para ejecutar un comando especifico en el compose
+docker-compose exec: ejecuta un comando dentro de un contenedor en ejecucion
